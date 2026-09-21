@@ -158,6 +158,8 @@ project/
 | `scripts/02_ocr.py` | Caption detection: OpenCV (default) / PP-OCRv5 (optional) |
 | `scripts/03_track.py` | IoU-based text tracking + EMA smoothing |
 | `scripts/tts_engines.py` | The five TTS engines, one shared `gen()` contract |
+| `scripts/chatterbox_loader.py` | Chatterbox base load + T3/tokenizer swap for Bangla checkpoints |
+| `scripts/hf_utils.py` | HF downloads + the demo reference voice |
 | `scripts/audio_utils.py` | Sentence splitting, silence trim, chunk concat |
 | `scripts/04_tts_shootout.py` | Runs every engine, reports which produced audio |
 | `scripts/05_voice.py` | Full-script narration + timing match to video duration |
