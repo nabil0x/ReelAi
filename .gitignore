@@ -1,0 +1,7 @@
+*.mp4
+*.wav
+*.jpg
+work/
+previews/
+__pycache__/
+.omo/

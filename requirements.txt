@@ -1,0 +1,9 @@
+paddlepaddle-gpu
+paddleocr
+opencv-python
+librosa
+soundfile
+transformers
+accelerate
+safetensors
+coqui-tts
