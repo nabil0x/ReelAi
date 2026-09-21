@@ -93,7 +93,7 @@ def gpu_report() -> None:
         print(torch.__version__, "| cuda:", torch.cuda.is_available())
         if torch.cuda.is_available():
             print(torch.cuda.get_device_name(0))
-            t = torch.cuda.get_device_properties(0).total_mem / 1e9
+            t = torch.cuda.get_device_properties(0).total_memory / 1e9
             print(f"VRAM total: {t:.1f} GB")
     except ImportError:
         print("torch not installed – CPU mode")
@@ -125,7 +125,14 @@ def pip_install(*pkgs: str, no_deps: bool = False, quiet: bool = True) -> int:
 def autodetect_video() -> str:
     import glob as _glob
     cands = _glob.glob("/kaggle/input/**/*.mp4", recursive=True)
-    return cands[0] if cands else "/kaggle/working/hindi_reel.mp4"
+    if cands:
+        return cands[0]
+    repo_assets = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "..", "assets", "*.mp4")
+    cands = sorted(_glob.glob(repo_assets))
+    if cands:
+        return cands[0]
+    return "/kaggle/working/hindi_reel.mp4"
 
 SRC_H264_NAME = "source_h264.mp4"
 

@@ -56,9 +56,14 @@ potentially better detection on complex scenes:
 This installs `paddlepaddle-gpu` and `paddleocr` from Paddle's own CUDA index.
 If it fails (CUDA mismatch, network issue), the pipeline continues with OpenCV.
 
-### 3. Upload your Hindi reel
+### 3. The input reel
 
-Upload `*.mp4` as a Kaggle dataset attachment, or place it anywhere under `/kaggle/input/`.
+The development reel ships in the repo at `assets/hindi_reel.mp4`, so no upload is
+needed — `--video` can be omitted entirely. `autodetect_video()` checks
+`/kaggle/input/**/*.mp4` first, then falls back to `assets/`.
+
+To use a different reel, upload it as a Kaggle dataset and pass
+`--video /kaggle/input/<dataset>/your_reel.mp4`.
 
 ### 4. Run each stage in order
 

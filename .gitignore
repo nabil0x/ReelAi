@@ -5,3 +5,4 @@ work/
 previews/
 __pycache__/
 .omo/
+!assets/*.mp4
