@@ -13,7 +13,7 @@ import argparse, glob, json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, read_video_meta, save_meta, sh, print_vram,
-    autodetect_video,
+    autodetect_video, normalize_video, SRC_H264_NAME,
 )
 
 def parse_args() -> argparse.Namespace:
@@ -38,19 +38,22 @@ def main() -> None:
     )
     print("ffprobe:\n", probe)
 
-    # --- OpenCV metadata ---
-    meta = read_video_meta(video)
+    # --- Normalise to H.264 (source may be AV1, which cv2 cannot decode) ---
+    src = normalize_video(video)
+
+    meta = read_video_meta(src)
+    meta["SRC"] = SRC_H264_NAME
     save_meta(meta)
     print(f"{meta['W']}x{meta['H']} @ {meta['FPS']:.1f}fps, "
           f"{meta['N']} frames, {meta['DUR']:.1f}s")
 
     # --- Extract audio (mono 16 kHz) ---
     wav_path = p("work", "orig_16k.wav")
-    sh(f"ffmpeg -y -v error -i {video} -vn -ac 1 -ar 16000 {wav_path}")
+    sh(f"ffmpeg -y -v error -i {src} -vn -ac 1 -ar 16000 {wav_path}")
     print(f"Audio -> {wav_path}")
 
     # --- Sample frames at 2 fps, scaled to 540x960 ---
-    sh(f"ffmpeg -y -v error -i {video} -vf fps=2,scale=540:960 {p('work', 'f_%03d.jpg')}")
+    sh(f"ffmpeg -y -v error -i {src} -vf fps=2,scale=540:960 {p('work', 'f_%03d.jpg')}")
     frames = sorted(glob.glob(p("work", "f_*.jpg")))
     print(f"Frames extracted: {len(frames)}")
 

@@ -21,7 +21,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, print_vram, cleanup,
-    autodetect_video, sh, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
+    autodetect_video, source_video, sh, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
 )
 
 REPO_URL = "https://github.com/sczhou/ProPainter.git"
@@ -126,7 +126,7 @@ def main() -> None:
     base_arg()
     ensure_dirs()
 
-    video = args.video or autodetect_video()
+    video = source_video(args.video)
     meta = load_meta()
     tracks_path = p("work", "text_tracks.json")
 

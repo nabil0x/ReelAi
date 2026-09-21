@@ -20,7 +20,8 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, print_vram, cleanup,
-    autodetect_video, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
+    autodetect_video, source_video, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
+    pip_install,
 )
 
 def parse_args() -> argparse.Namespace:
@@ -55,24 +56,17 @@ def _build_box_mask(W: int, H: int, boxes: list[dict], dilate_k: int) -> np.ndar
 # ------------------------------------------------------------------
 
 def _ensure_lama_pkg() -> bool:
-    """Runtime-install lama-cleaner with --no-deps (its PyPI pins are ancient
-    and would otherwise break the whole env resolver). Returns True if
-    importable afterwards."""
+    """Runtime-install lama-cleaner with --no-deps. Returns True if importable."""
     try:
         import lama_cleaner  # noqa: F401
         return True
     except ImportError:
         pass
-    import subprocess
-    r = subprocess.run(
-        ["pip", "install", "-q", "lama-cleaner==1.2.5", "--no-deps"],
-        capture_output=True, text=True,
-    )
+    pip_install("lama-cleaner==1.2.5", no_deps=True)
     try:
         import lama_cleaner  # noqa: F401
         return True
     except ImportError:
-        print(f"  lama-cleaner unavailable ({r.stderr.strip()[-200:]})")
         return False
 
 def _try_lama_clean(frame: np.ndarray, mask: np.ndarray) -> np.ndarray | None:
@@ -119,7 +113,7 @@ def main() -> None:
     base_arg()
     ensure_dirs()
 
-    video = args.video or autodetect_video()
+    video = source_video(args.video)
     meta = load_meta()
     tracks_path = p("work", "text_tracks.json")
 

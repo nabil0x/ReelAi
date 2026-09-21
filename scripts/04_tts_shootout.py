@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import base_arg, ensure_dirs, p, print_vram, cleanup, TTS_MODELS
+from common import base_arg, ensure_dirs, p, print_vram, cleanup, TTS_MODELS, pip_install
 
 SAMPLE_TEXT = (
     "আপনি থাকুন, অথবা বাইরে থাকুন... "
@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 def _try_chatterbox(out: str) -> str:
     """Chatterbox Bangla TTS (EMTIAZZ)."""
-    os.system("pip install -q chatterbox-tts")
+    pip_install("chatterbox-tts")
     from chatterbox.tts import ChatterboxTTS
     import soundfile as sf
     import torch
@@ -60,21 +60,11 @@ def _try_cosyvoice(out: str) -> str:
     return "ok"
 
 def _try_vits(out: str) -> str:
-    """Bangladeshi VITS (EMTIAZZ) via coqui-tts.
-
-    Installed at runtime with --no-deps: coqui-tts pulls a training-only
-    `coqui-tts-trainer` with an ancient accelerate cap that sends pip's
-    resolver into endless backtracking. Light runtime deps are already in
-    requirements.txt; the trainer package is never needed for inference.
-    """
+    """Bangladeshi VITS (EMTIAZZ) via coqui-tts."""
     try:
         from TTS.api import TTS
     except ImportError:
-        import subprocess
-        subprocess.run(
-            ["pip", "install", "-q", "coqui-tts", "--no-deps"],
-            capture_output=True, text=True,
-        )
+        pip_install("coqui-tts", no_deps=True)
         from TTS.api import TTS
     model = TTS(TTS_MODELS["vits"], gpu=True)
     model.tts_to_file(SAMPLE_TEXT, file_path=out)
@@ -99,7 +89,7 @@ def _try_mms(out: str) -> str:
 
 def _try_jongy5(out: str) -> str:
     """Chatterbox Bangla TTS (jongy5) – same ChatterboxTTS API, different weights."""
-    os.system("pip install -q chatterbox-tts")
+    pip_install("chatterbox-tts")
     from chatterbox.tts import ChatterboxTTS
     import soundfile as sf
     import torch
