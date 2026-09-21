@@ -35,8 +35,13 @@ Run **one** of the three cleaning scripts before the overlay stage, or chain the
 ```python
 !git clone https://github.com/nabil0x/ReelAi.git /kaggle/working/ReelAi
 %cd /kaggle/working/ReelAi
-!pip install -r requirements.txt
+!bash scripts/install.sh
 ```
+
+> `install.sh` freezes the packages Kaggle already ships into a constraints file
+> and installs with `-c`, so pip never re-resolves (and never backtracks on)
+> `huggingface-hub` / `paddlex` / `modelscope`. Always use it instead of a bare
+> `pip install -r requirements.txt`.
 
 ### 2. Upload your Hindi reel
 
