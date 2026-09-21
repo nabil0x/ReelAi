@@ -113,7 +113,7 @@ Grab `output/bangladesh_reel_adaptation.zip` from the Kaggle output panel.
 
 | Note | Detail |
 |------|--------|
-| **Voice cloning** | `--ref-voice <wav>` (3-6 s clean Bangla speech) is optional for chatterbox/jongy5 and **required** for cosyvoice (cross-lingual clone). Without it, chatterbox uses its built-in default voice. |
+| **Reference voice** | `--ref-voice <wav>` (3-6 s clean Bangla speech). If omitted, the demo reference published with `jongy5/chatterbox-bangla` (`audios/refs/001.wav`) is fetched at runtime and cached to `models/refs/` — nothing is bundled in git. **Cloning a speaker requires that speaker's permission**; supply your own wav for production. `cosyvoice` needs a reference (demo one is used automatically). |
 | **Engine notes** | `chatterbox` (EMTIAZZ) needs base ResembleAI files + fine-tuned T3 swap — handled automatically. `jongy5` ships a complete dir and loads directly. `mms_fallback` is the always-works last resort. `cosyvoice` needs the CosyVoice repo and frequently SKIPs on Kaggle. |
 | **BEST model** | Set `--model` in `05_voice.py` / `08_package.py` to the winner from the shootout. Choices: `chatterbox`, `cosyvoice`, `vits`, `mms_fallback`, `jongy5`. Default is `vits`. |
 | **Preview first** | Run `06_preview.py` before the full render to verify overlay quality on 8 seconds. |

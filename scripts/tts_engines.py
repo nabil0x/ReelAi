@@ -4,11 +4,10 @@ Every engine exposes the same contract:
 
     gen(text, out_wav, model_id, ref_audio=None, device="cuda") -> bool
 
-Returns True only when ``out_wav`` was written. Engines degrade to False with an
+Returns True only when ``out_wav`` was written; otherwise False with an
 actionable message so the shootout can continue down the fallback chain.
-
-Chatterbox-Bangla follows the official model-card recipe: base ResembleAI
-files plus fine-tuned T3 weights swapped in against an extended Bangla vocab.
+Chatterbox-Bangla follows the official recipe: base ResembleAI files plus
+fine-tuned T3 weights swapped in against an extended Bangla vocab.
 """
 from __future__ import annotations
 
@@ -29,15 +28,12 @@ MMS_MODEL = "facebook/mms-tts-ben"
 COSYVOICE_MODEL = "kawshikbuet17/bengali-cosyvoice3-tts"
 
 BANGLA_VOCAB = 4240
-CB_PARAMS = {
-    "temperature": 0.3,
-    "exaggeration": 0.5,
-    "cfg_weight": 0.5,
-    "repetition_penalty": 1.2,
-    "min_new_tokens": 150,
-}
+CB_PARAMS = dict(temperature=0.3, exaggeration=0.5, cfg_weight=0.5,
+                 repetition_penalty=1.2, min_new_tokens=150)
 CB_BASE_FILES = ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "conds.pt"]
 JONGY5_FILES = CB_BASE_FILES + ["tokenizer.json"]
+DEMO_REF_REPO = "jongy5/chatterbox-bangla"
+DEMO_REF_FILE = "audios/refs/001.wav"
 
 
 def _hf(repo: str, filename: str, dest: str) -> str:
@@ -235,6 +231,24 @@ REGISTRY = {
 NAMES = ["chatterbox", "cosyvoice", "vits", "mms_fallback", "jongy5"]
 
 
+def default_reference() -> str | None:
+    """Fetch the demo Bangla reference voice published with jongy5's model.
+
+    For production use pass your own --ref-voice; cloning a speaker requires
+    that speaker's permission.
+    """
+    try:
+        path = _hf(DEMO_REF_REPO, DEMO_REF_FILE, p("models", "refs"))
+        print(f"  demo reference voice: {DEMO_REF_REPO}/{DEMO_REF_FILE}")
+        print("  (pass --ref-voice <wav> to clone your own speaker instead)")
+        return path
+    except Exception as e:
+        print(f"  demo reference unavailable ({e})")
+        return None
+
+
 def gen(name: str, text: str, out_wav: str,
         ref_audio: str | None = None, device: str = "cuda") -> bool:
+    if ref_audio is None and name != "mms_fallback":
+        ref_audio = default_reference()
     return REGISTRY[name](text, out_wav, ref_audio, device)
