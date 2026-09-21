@@ -60,9 +60,22 @@ def _try_cosyvoice(out: str) -> str:
     return "ok"
 
 def _try_vits(out: str) -> str:
-    """Bangladeshi VITS (EMTIAZZ) via coqui-tts."""
-    os.system("pip install -q coqui-tts")
-    from TTS.api import TTS
+    """Bangladeshi VITS (EMTIAZZ) via coqui-tts.
+
+    Installed at runtime with --no-deps: coqui-tts pulls a training-only
+    `coqui-tts-trainer` with an ancient accelerate cap that sends pip's
+    resolver into endless backtracking. Light runtime deps are already in
+    requirements.txt; the trainer package is never needed for inference.
+    """
+    try:
+        from TTS.api import TTS
+    except ImportError:
+        import subprocess
+        subprocess.run(
+            ["pip", "install", "-q", "coqui-tts", "--no-deps"],
+            capture_output=True, text=True,
+        )
+        from TTS.api import TTS
     model = TTS(TTS_MODELS["vits"], gpu=True)
     model.tts_to_file(SAMPLE_TEXT, file_path=out)
     del model; cleanup()

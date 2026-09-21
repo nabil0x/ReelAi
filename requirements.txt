@@ -1,3 +1,4 @@
+--prefer-binary
 paddlepaddle-gpu
 paddleocr
 opencv-python
@@ -6,6 +7,13 @@ soundfile
 transformers
 accelerate
 safetensors
-coqui-tts
+anyascii
+coqpit-config
+einops
+inflect
+num2words
+pysbd
+monotonic-alignment-search
+ko-speech-tools
 loguru
 PyYAML>=6.0.3,<6.1
