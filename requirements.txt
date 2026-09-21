@@ -7,3 +7,4 @@ transformers
 accelerate
 safetensors
 coqui-tts
+PyYAML>=6.0.3,<6.1
