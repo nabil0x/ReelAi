@@ -1,8 +1,23 @@
+# media and generated artifacts
 *.mp4
 *.wav
 *.jpg
-work/
-previews/
+*.zip
 __pycache__/
 .omo/
+
+# the bundled sample reel is tracked despite *.mp4
 !assets/*.mp4
+
+# scratch dirs at repo root
+/work/
+/previews/
+
+# pipeline project tree: keep placeholders, ignore generated contents
+project/input/*
+project/work/*
+project/models/*
+project/output/*
+project/previews/*
+project/tts_tests/*
+!project/*/.gitkeep

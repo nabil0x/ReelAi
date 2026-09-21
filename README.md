@@ -121,6 +121,25 @@ Grab `output/bangladesh_reel_adaptation.zip` from the Kaggle output panel.
 | **Video path** | Every script accepts `--video <path>`. If omitted, the first `.mp4` under `/kaggle/input/` is auto-detected. |
 | **Project root** | Override with `--base <path>` (default: `/kaggle/working/project`). |
 
+## Output folders
+
+The pipeline writes into a project tree. On Kaggle this defaults to
+`/kaggle/working/project`; the same tree is mirrored in the repo as `project/`
+(placeholders only — generated contents are gitignored) so you can point a run
+at it with `--base project` on a local machine.
+
+```
+project/
+├── input/       # optional: local copy of the source reel
+├── work/        # meta.json, frames, text_detections.json, text_tracks.json, bangla_voice.wav
+├── models/      # downloaded weights + cached reference voices
+├── output/      # bangladesh_version.mp4, quality_report.json, the delivery ZIP
+├── previews/    # preview.mp4 / preview_silent.mp4
+└── tts_tests/   # per-engine samples + shootout_report.json
+```
+
+`scripts/00_setup.py` calls `ensure_dirs()` and creates all six on first run.
+
 ## Scripts
 
 | Script | Purpose |
