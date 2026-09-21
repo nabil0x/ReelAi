@@ -1,102 +1,55 @@
-"""05_voice – Generate full Bangla voice from the winning TTS model.
+"""05_voice – Generate the full Bangla narration with the chosen engine.
 
-Generates the COMPLETE Bangla script (not a 12s sample stretch).
-Writes work/bangla_voice_raw.wav (natural, unstretched), then
-timing-matches to meta["DUR"] via librosa and writes work/bangla_voice.wav.
-
-Falls back to the shootout sample wav if full generation fails.
+Generates the complete script via tts_engines, writes the natural result to
+work/bangla_voice_raw.wav, then time-stretches it to match the original video
+duration and writes work/bangla_voice.wav.
 
 Usage:
-    python scripts/05_voice.py --model vits [--base ...]
-    # --model choices: chatterbox | cosyvoice | vits | mms_fallback | jongy5
+    python scripts/05_voice.py --model chatterbox [--ref-voice wav] [--base ...]
+    # models: chatterbox | cosyvoice | vits | mms_fallback | jongy5
 """
 from __future__ import annotations
-import argparse, os, sys
+
+import argparse
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from common import (
-    base_arg, ensure_dirs, p, print_vram, cleanup,
-    load_meta, load_bangla_script, TTS_MODELS, pip_install,
+    base_arg, ensure_dirs, p, print_vram, load_meta, load_bangla_script,
 )
+import tts_engines
 
-CHOICES = ["chatterbox", "cosyvoice", "vits", "mms_fallback", "jongy5"]
+MAX_STRETCH = 1.12
 
 
 def parse_args() -> argparse.Namespace:
-    ap = argparse.ArgumentParser(description="Full Bangla voice generation")
-    ap.add_argument("--model", default="vits", choices=CHOICES,
-                    help="TTS model name from the shootout")
-    ap.add_argument("--base", default="/kaggle/working/project",
-                    help="Project root")
+    ap = argparse.ArgumentParser(description="Full Bangla narration")
+    ap.add_argument("--model", default="mms_fallback", choices=tts_engines.NAMES)
+    ap.add_argument("--ref-voice", default=None, help="Reference wav for cloning")
+    ap.add_argument("--base", default="/kaggle/working/project")
     return ap.parse_args()
 
 
-# ------------------------------------------------------------------
-# Per-model full-script generators
-# ------------------------------------------------------------------
+def _load_mono(path: str):
+    import librosa
 
-def _gen_chatterbox(text: str, out_wav: str, model_id: str) -> bool:
-    pip_install("chatterbox-tts")
-    from chatterbox.tts import ChatterboxTTS
-    import soundfile as sf
-    model = ChatterboxTTS.from_pretrained(model_id, device="cuda")
-    wav = model.generate(text, language_id="bn")
-    sf.write(out_wav, wav.squeeze().cpu().numpy(), model.sr)
-    del model; cleanup()
-    return True
+    y, sr = librosa.load(path, sr=None, mono=True)
+    return y, sr
 
 
-def _gen_cosyvoice(text: str, out_wav: str) -> bool:
-    from transformers import AutoModelForTextToWaveform, AutoProcessor
-    import soundfile as sf, torch
-    pid = TTS_MODELS["cosyvoice"]
-    proc = AutoProcessor.from_pretrained(pid, trust_remote_code=True)
-    model = AutoModelForTextToWaveform.from_pretrained(
-        pid, trust_remote_code=True, torch_dtype=torch.float16,
-    ).to("cuda")
-    inp = proc(text=[text], return_tensors="pt").to("cuda")
-    with torch.no_grad():
-        result = model.generate(**inp)
-    sr = getattr(proc, "sampling_rate", 24000)
-    sf.write(out_wav, result.cpu().numpy().squeeze(), sr)
-    del model, proc; cleanup()
-    return True
+def _fit_duration(y, sr: int, target: float):
+    import librosa
 
-
-def _gen_vits(text: str, out_wav: str) -> bool:
-    try:
-        from TTS.api import TTS
-    except ImportError:
-        pip_install("coqui-tts", no_deps=True)
-        from TTS.api import TTS
-    model = TTS(TTS_MODELS["vits"], gpu=True)
-    model.tts_to_file(text, file_path=out_wav)
-    del model; cleanup()
-    return True
-
-
-def _gen_mms(text: str, out_wav: str) -> bool:
-    from transformers import VitsModel, AutoTokenizer
-    import soundfile as sf, torch
-    tok = AutoTokenizer.from_pretrained(TTS_MODELS["mms_fallback"])
-    model = VitsModel.from_pretrained(
-        TTS_MODELS["mms_fallback"], torch_dtype=torch.float16,
-    ).to("cuda")
-    inp = tok(text, return_tensors="pt").to("cuda")
-    with torch.no_grad():
-        wav = model(**inp).waveform
-    sf.write(out_wav, wav.cpu().numpy().squeeze(), 16000)
-    del model, tok; cleanup()
-    return True
-
-
-GENERATORS = {
-    "chatterbox":   lambda t, o: _gen_chatterbox(t, o, TTS_MODELS["chatterbox"]),
-    "cosyvoice":    _gen_cosyvoice,
-    "vits":         _gen_vits,
-    "mms_fallback": _gen_mms,
-    "jongy5":       lambda t, o: _gen_chatterbox(t, o, TTS_MODELS["jongy5"]),
-}
+    dur = len(y) / sr
+    rate = dur / target if target > 0 else 1.0
+    if 0.9 <= rate <= MAX_STRETCH:
+        return librosa.effects.time_stretch(y.astype("float32"), rate=rate)
+    if rate > MAX_STRETCH:
+        print(f"WARNING: {dur:.1f}s vs target {target:.1f}s - capping at "
+              f"{MAX_STRETCH}x. Shorten the Bangla wording for a natural fit.")
+        return librosa.effects.time_stretch(y.astype("float32"), rate=MAX_STRETCH)
+    return y.astype("float32")
 
 
 def main() -> None:
@@ -104,70 +57,37 @@ def main() -> None:
     base_arg()
     ensure_dirs()
 
-    model_name = args.model
-    print(f"Using model: {model_name}")
     print_vram("pre-voice")
-
-    meta = load_meta()
-    target_dur = meta["DUR"]
-    print(f"Target duration: {target_dur:.1f}s")
-
+    target = load_meta()["DUR"]
     script = load_bangla_script()
-    raw_wav = p("work", "bangla_voice_raw.wav")
-    final_wav = p("work", "bangla_voice.wav")
-    gen_ok = False
+    raw = p("work", "bangla_voice_raw.wav")
+    final = p("work", "bangla_voice.wav")
+    print(f"Engine: {args.model} | target {target:.1f}s | script {len(script)} chars")
 
-    print(f"Generating full script ({len(script)} chars) ...")
     try:
-        gen_ok = GENERATORS[model_name](script, raw_wav)
+        ok = tts_engines.gen(args.model, script, raw, args.ref_voice, "cuda")
     except Exception as e:
-        print(f"WARNING: full generation failed: {e}")
-        gen_ok = False
+        ok = False
+        print(f"Full generation raised: {type(e).__name__}: {e}")
 
-    if gen_ok and os.path.exists(raw_wav):
-        import soundfile as sf, librosa
-        y, sr = sf.read(raw_wav)
-        if hasattr(y, "ndim") and y.ndim > 1:
-            y = y.mean(axis=1)
-        raw_dur = len(y) / sr
-        print(f"Raw duration: {raw_dur:.1f}s (target {target_dur:.1f}s)")
-
-        rate = raw_dur / target_dur if target_dur > 0 else 1.0
-        print(f"Stretch rate: {rate:.3f}")
-
-        if 0.9 <= rate <= 1.12:
-            y_out = librosa.effects.time_stretch(y.astype("float32"), rate=rate)
-        elif rate > 1.12:
-            print("WARNING: audio too long – capping stretch at 1.12x.")
-            print("         Shorten wording then regenerate.")
-            y_out = librosa.effects.time_stretch(y.astype("float32"), rate=1.12)
-        else:
-            y_out = y
-
-        sf.write(final_wav, y_out, sr)
-        print(f"Saved -> {final_wav} ({len(y_out) / sr:.1f}s)")
-    else:
-        print("FALLBACK: full generation failed – using shootout sample wav")
-        import soundfile as sf, librosa
-        src = p("tts_tests", f"{model_name}.wav")
-        if not os.path.exists(src):
-            print(f"ERROR: {src} not found – run 04_tts_shootout.py first")
+    if not ok or not os.path.exists(raw):
+        sample = p("tts_tests", f"{args.model}.wav")
+        if not os.path.exists(sample):
+            print(f"ERROR: generation failed and {sample} is missing. "
+                  f"Run 04_tts_shootout.py first.")
             sys.exit(1)
-        y, sr = librosa.load(src, sr=24000)
-        raw_dur = len(y) / sr
-        print(f"Fallback sample duration: {raw_dur:.1f}s")
+        print(f"FALLBACK: using shootout sample {sample}. "
+              f"Regenerate the full script for best quality.")
+        raw = sample
 
-        rate = raw_dur / target_dur if target_dur > 0 else 1.0
-        if 0.9 <= rate <= 1.12:
-            y_out = librosa.effects.time_stretch(y, rate=rate)
-        elif rate > 1.12:
-            y_out = librosa.effects.time_stretch(y, rate=1.12)
-        else:
-            y_out = y
+    import librosa
+    import soundfile as sf
 
-        sf.write(final_wav, y_out, sr)
-        print(f"Saved -> {final_wav} ({len(y_out) / sr:.1f}s)")
-
+    y, sr = _load_mono(raw)
+    print(f"Raw narration: {len(y)/sr:.1f}s @ {sr} Hz")
+    sf.write(final, _fit_duration(y, sr, target), sr)
+    y2, _ = librosa.load(final, sr=None, mono=True)
+    print(f"Final narration: {len(y2)/sr:.1f}s -> {final}")
     print_vram("post-voice")
 
 

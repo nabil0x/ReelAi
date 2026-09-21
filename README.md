@@ -72,7 +72,8 @@ To use a different reel, upload it as a Kaggle dataset and pass
 !python scripts/01_extract.py --video /kaggle/input/your_reel.mp4
 !python scripts/02_ocr.py                            # OpenCV caption detection (default)
 !python scripts/03_track.py                          # IoU tracking
-!python scripts/04_tts_shootout.py                   # Test 5 TTS models
+!python scripts/04_tts_shootout.py                   # Test 5 TTS engines
+!python scripts/04_tts_shootout.py --ref-voice your_voice.wav   # if you want cloning
 ```
 
 > If you installed PP-OCRv5, you can try `!python scripts/02_ocr.py --engine paddle` or
@@ -112,6 +113,8 @@ Grab `output/bangladesh_reel_adaptation.zip` from the Kaggle output panel.
 
 | Note | Detail |
 |------|--------|
+| **Voice cloning** | `--ref-voice <wav>` (3-6 s clean Bangla speech) is optional for chatterbox/jongy5 and **required** for cosyvoice (cross-lingual clone). Without it, chatterbox uses its built-in default voice. |
+| **Engine notes** | `chatterbox` (EMTIAZZ) needs base ResembleAI files + fine-tuned T3 swap — handled automatically. `jongy5` ships a complete dir and loads directly. `mms_fallback` is the always-works last resort. `cosyvoice` needs the CosyVoice repo and frequently SKIPs on Kaggle. |
 | **BEST model** | Set `--model` in `05_voice.py` / `08_package.py` to the winner from the shootout. Choices: `chatterbox`, `cosyvoice`, `vits`, `mms_fallback`, `jongy5`. Default is `vits`. |
 | **Preview first** | Run `06_preview.py` before the full render to verify overlay quality on 8 seconds. |
 | **Caption detector** | Default is OpenCV (no extra packages). PP-OCRv5 is optional via `--engine paddle`. |
@@ -127,8 +130,10 @@ Grab `output/bangladesh_reel_adaptation.zip` from the Kaggle output panel.
 | `scripts/01_extract.py` | ffprobe metadata + mono WAV + keyframe extraction |
 | `scripts/02_ocr.py` | Caption detection: OpenCV (default) / PP-OCRv5 (optional) |
 | `scripts/03_track.py` | IoU-based text tracking + EMA smoothing |
-| `scripts/04_tts_shootout.py` | TTS model shootout (Chatterbox / CosyVoice / VITS / MMS / jongy5) |
-| `scripts/05_voice.py` | Full-script TTS generation + timing match to video duration |
+| `scripts/tts_engines.py` | The five TTS engines, one shared `gen()` contract |
+| `scripts/audio_utils.py` | Sentence splitting, silence trim, chunk concat |
+| `scripts/04_tts_shootout.py` | Runs every engine, reports which produced audio |
+| `scripts/05_voice.py` | Full-script narration + timing match to video duration |
 | `scripts/06_preview.py` | 8-second preview with temporal inpaint + Bangla overlay |
 | `scripts/07_full.py` | Chunked temporal-median clean + overlay + H.264/AAC compose |
 | `scripts/07b_propainter.py` | ProPainter neural video inpainting on tracked text masks |
