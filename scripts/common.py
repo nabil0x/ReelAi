@@ -41,6 +41,7 @@ TTS_MODELS = {
     "cosyvoice":  "kawshikbuet17/bengali-cosyvoice3-tts",
     "vits":       "EMTIAZZ/bangladeshi-bangla-tts-vits",
     "mms_fallback": "facebook/mms-tts-ben",
+    "jongy5":     "jongy5/chatterbox-bangla",
 }
 
 # Default Bangla script (from localized_script.txt)

@@ -1,6 +1,6 @@
 """04_tts_shootout – Load/generate/unload each TTS model on the same sample.
 
-Tests four Bengali TTS models and writes ~12 s wav samples to tts_tests/.
+Tests five Bengali TTS models and writes ~12 s wav samples to tts_tests/.
 After listening, set the winner name in 05_voice.py via --model.
 
 Outputs:
@@ -8,6 +8,7 @@ Outputs:
     tts_tests/cosyvoice.wav
     tts_tests/vits.wav
     tts_tests/mms_fallback.wav
+    tts_tests/jongy5.wav
 
 Usage:
     python scripts/04_tts_shootout.py [--base ...]
@@ -83,11 +84,24 @@ def _try_mms(out: str) -> str:
     del model, tok; cleanup()
     return "ok"
 
+def _try_jongy5(out: str) -> str:
+    """Chatterbox Bangla TTS (jongy5) – same ChatterboxTTS API, different weights."""
+    os.system("pip install -q chatterbox-tts")
+    from chatterbox.tts import ChatterboxTTS
+    import soundfile as sf
+    import torch
+    model = ChatterboxTTS.from_pretrained(TTS_MODELS["jongy5"], device="cuda")
+    wav = model.generate(SAMPLE_TEXT, language_id="bn")
+    sf.write(out, wav.squeeze().cpu().numpy(), model.sr)
+    del model; cleanup()
+    return "ok"
+
 RUNNERS = {
-    "chatterbox":   ("chatterbox", _try_chatterbox),
-    "cosyvoice":    ("cosyvoice",  _try_cosyvoice),
-    "vits":         ("vits",       _try_vits),
+    "chatterbox":   ("chatterbox",   _try_chatterbox),
+    "cosyvoice":    ("cosyvoice",    _try_cosyvoice),
+    "vits":         ("vits",         _try_vits),
     "mms_fallback": ("mms_fallback", _try_mms),
+    "jongy5":       ("jongy5",       _try_jongy5),
 }
 
 def main() -> None:
@@ -98,7 +112,7 @@ def main() -> None:
     print_vram("pre-tts")
     report: dict[str, str] = {}
 
-    for key in ("chatterbox", "cosyvoice", "vits", "mms_fallback"):
+    for key in ("chatterbox", "cosyvoice", "vits", "mms_fallback", "jongy5"):
         name, fn = RUNNERS[key]
         out = p("tts_tests", f"{name}.wav")
         try:

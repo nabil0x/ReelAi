@@ -10,7 +10,7 @@ Outputs:
 
 Usage:
     python scripts/05_voice.py --model vits [--base ...]
-    # --model choices: chatterbox | cosyvoice | vits | mms_fallback
+    # --model choices: chatterbox | cosyvoice | vits | mms_fallback | jongy5
 """
 from __future__ import annotations
 import argparse, json, os, sys
@@ -22,7 +22,7 @@ from common import base_arg, ensure_dirs, p, print_vram, cleanup, load_meta
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Full Bangla voice with winning TTS model")
     ap.add_argument("--model", default="vits",
-                    choices=["chatterbox", "cosyvoice", "vits", "mms_fallback"],
+                    choices=["chatterbox", "cosyvoice", "vits", "mms_fallback", "jongy5"],
                     help="TTS model name from the shootout")
     ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
     return ap.parse_args()
