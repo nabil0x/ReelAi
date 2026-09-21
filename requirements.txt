@@ -7,5 +7,5 @@ transformers
 accelerate
 safetensors
 coqui-tts
-lama-cleaner
+loguru
 PyYAML>=6.0.3,<6.1

@@ -54,9 +54,32 @@ def _build_box_mask(W: int, H: int, boxes: list[dict], dilate_k: int) -> np.ndar
 # LaMa cleaner
 # ------------------------------------------------------------------
 
+def _ensure_lama_pkg() -> bool:
+    """Runtime-install lama-cleaner with --no-deps (its PyPI pins are ancient
+    and would otherwise break the whole env resolver). Returns True if
+    importable afterwards."""
+    try:
+        import lama_cleaner  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    import subprocess
+    r = subprocess.run(
+        ["pip", "install", "-q", "lama-cleaner==1.2.5", "--no-deps"],
+        capture_output=True, text=True,
+    )
+    try:
+        import lama_cleaner  # noqa: F401
+        return True
+    except ImportError:
+        print(f"  lama-cleaner unavailable ({r.stderr.strip()[-200:]})")
+        return False
+
 def _try_lama_clean(frame: np.ndarray, mask: np.ndarray) -> np.ndarray | None:
     """Run lama-cleaner on a single frame+mask. Returns cleaned frame or None."""
     try:
+        if not _ensure_lama_pkg():
+            return None
         from lama_cleaner.model_manager import ModelManager
         from lama_cleaner.schema import Config
         import torch
