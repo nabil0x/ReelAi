@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, print_vram, cleanup,
     autodetect_video, source_video, sh, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
+    DEFAULT_BASE,
 )
 
 REPO_URL = "https://github.com/sczhou/ProPainter.git"
@@ -30,7 +31,7 @@ REPO_DIR_NAME = "ProPainter"
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="ProPainter video-inpainting")
     ap.add_argument("--video", default=None, help="Input .mp4 path")
-    ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
+    ap.add_argument("--base", default=DEFAULT_BASE, help="Project root")
     ap.add_argument("--chunk_size", type=int, default=8,
                     help="Frames per inference chunk (default 8)")
     ap.add_argument("--fp16", action="store_true", default=True,

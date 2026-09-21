@@ -22,6 +22,7 @@ from common import (
     autodetect_video, source_video, load_bangla_script, ensure_font,
     CAPTION_TOP_FRAC, CAPTION_BOT_FRAC, sh, FALLBACK_FPS,
     build_frame_masks, build_caption_anchors,
+    DEFAULT_BASE,
 )
 
 CHUNK_SIZE = 30
@@ -30,7 +31,7 @@ CHUNK_SIZE = 30
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Full clean + overlay + compose")
     ap.add_argument("--video", default=None, help="Input .mp4 path")
-    ap.add_argument("--base", default="/kaggle/working/project",
+    ap.add_argument("--base", default=DEFAULT_BASE,
                     help="Project root")
     return ap.parse_args()
 

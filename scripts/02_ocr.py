@@ -19,6 +19,7 @@ from common import (
     base_arg, ensure_dirs, p, print_vram, cleanup,
     CAPTION_MIN_W, CAPTION_MIN_H,
     load_meta, keyframe_scale, scale_boxes,
+    DEFAULT_BASE,
 )
 
 
@@ -27,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--engine", default="opencv",
                     choices=["opencv", "paddle", "auto"],
                     help="Detection engine (default: opencv)")
-    ap.add_argument("--base", default="/kaggle/working/project",
+    ap.add_argument("--base", default=DEFAULT_BASE,
                     help="Project root")
     return ap.parse_args()
 

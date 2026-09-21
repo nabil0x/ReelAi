@@ -20,7 +20,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import base_arg, ensure_dirs, p, print_vram, cleanup
+from common import base_arg, ensure_dirs, p, print_vram, cleanup, DEFAULT_BASE
 import tts_engines
 
 SAMPLE_TEXT = (
@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="TTS engine shootout")
     ap.add_argument("--ref-voice", default=None,
                     help="Reference wav for voice cloning (cosyvoice needs it)")
-    ap.add_argument("--base", default="/kaggle/working/project",
+    ap.add_argument("--base", default=DEFAULT_BASE,
                     help="Project root")
     return ap.parse_args()
 

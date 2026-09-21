@@ -22,13 +22,14 @@ from common import (
     autodetect_video, source_video, load_bangla_script, ensure_font,
     CAPTION_TOP_FRAC, CAPTION_BOT_FRAC, build_frame_masks,
     build_caption_anchors,
+    DEFAULT_BASE,
 )
 
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="8s preview with Bangla overlay")
     ap.add_argument("--video", default=None, help="Input .mp4 path")
-    ap.add_argument("--base", default="/kaggle/working/project",
+    ap.add_argument("--base", default=DEFAULT_BASE,
                     help="Project root")
     ap.add_argument("--seconds", type=int, default=8,
                     help="Preview length in seconds")

@@ -22,12 +22,13 @@ from common import (
     base_arg, ensure_dirs, p, print_vram, cleanup,
     autodetect_video, source_video, load_meta, FALLBACK_W, FALLBACK_H, FALLBACK_FPS,
     pip_install,
+    DEFAULT_BASE,
 )
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="LaMa per-box frame cleaner")
     ap.add_argument("--video", default=None, help="Input .mp4 path")
-    ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
+    ap.add_argument("--base", default=DEFAULT_BASE, help="Project root")
     ap.add_argument("--dilate", type=int, default=5,
                     help="Mask dilation kernel size (odd, default 5)")
     return ap.parse_args()

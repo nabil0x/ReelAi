@@ -10,11 +10,11 @@ from __future__ import annotations
 import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import base_arg, ensure_dirs, p
+from common import base_arg, ensure_dirs, p, DEFAULT_BASE
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="IoU text tracking across frames")
-    ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
+    ap.add_argument("--base", default=DEFAULT_BASE, help="Project root")
     return ap.parse_args()
 
 def iou(a: dict, b: dict) -> float:

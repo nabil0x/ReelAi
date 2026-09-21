@@ -123,10 +123,18 @@ Grab `output/bangladesh_reel_adaptation.zip` from the Kaggle output panel.
 
 ## Output folders
 
-The pipeline writes into a project tree. On Kaggle this defaults to
-`/kaggle/working/project`; the same tree is mirrored in the repo as `project/`
-(placeholders only — generated contents are gitignored) so you can point a run
-at it with `--base project` on a local machine.
+Every script resolves its paths from a single base directory. The default is
+`<repo>/project`, so a run is self-contained wherever the repo lives:
+
+```bash
+python scripts/00_setup.py                  # -> <repo>/project
+python scripts/00_setup.py --base /data/run # custom root
+REELAI_BASE=/data/run python scripts/...    # env override
+```
+
+On Kaggle the repo is cloned to `/kaggle/working/ReelAi`, so outputs land in
+`/kaggle/working/ReelAi/project/` — still under `/kaggle/working`, so they stay
+downloadable. Pass `--base /kaggle/working/project` if you prefer the old path.
 
 ```
 project/

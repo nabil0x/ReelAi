@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, print_vram, load_meta, load_bangla_script,
+    DEFAULT_BASE,
 )
 import tts_engines
 
@@ -27,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Full Bangla narration")
     ap.add_argument("--model", default="mms_fallback", choices=tts_engines.NAMES)
     ap.add_argument("--ref-voice", default=None, help="Reference wav for cloning")
-    ap.add_argument("--base", default="/kaggle/working/project")
+    ap.add_argument("--base", default=DEFAULT_BASE)
     return ap.parse_args()
 
 

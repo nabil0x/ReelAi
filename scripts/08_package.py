@@ -11,12 +11,12 @@ from __future__ import annotations
 import argparse, json, os, sys, zipfile
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import base_arg, ensure_dirs, p, load_meta, autodetect_video
+from common import base_arg, ensure_dirs, p, load_meta, autodetect_video, DEFAULT_BASE
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Package output + quality report")
     ap.add_argument("--model", default="vits", help="TTS model used (for report)")
-    ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
+    ap.add_argument("--base", default=DEFAULT_BASE, help="Project root")
     return ap.parse_args()
 
 def main() -> None:

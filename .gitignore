@@ -21,3 +21,4 @@ project/output/*
 project/previews/*
 project/tts_tests/*
 !project/*/.gitkeep
+constraints.txt

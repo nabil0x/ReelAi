@@ -16,7 +16,8 @@
 
 set -euo pipefail
 
-CONSTRAINTS=/kaggle/working/constraints.txt
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CONSTRAINTS="${REELAI_CONSTRAINTS:-$REPO_ROOT/constraints.txt}"
 REQS="$(dirname "$0")/../requirements.txt"
 
 # Snapshot installed versions, dropping any partial paddle installs so they

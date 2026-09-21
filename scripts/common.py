@@ -3,7 +3,8 @@ from __future__ import annotations
 import gc, glob, json, os, subprocess, sys
 from pathlib import Path
 
-DEFAULT_BASE = "/kaggle/working/project"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_BASE = os.environ.get("REELAI_BASE") or os.path.join(REPO_ROOT, "project")
 SUBDIRS = ["input", "work", "models", "output", "previews", "tts_tests"]
 FALLBACK_W, FALLBACK_H, FALLBACK_FPS = 1080, 1920, 30
 
@@ -104,6 +105,16 @@ def sh(cmd: str) -> str:
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     return r.stdout.strip() + r.stderr.strip()
 
+def constraints_file() -> str | None:
+    """Locate the pip constraints snapshot written by scripts/install.sh."""
+    for cand in (os.environ.get("REELAI_CONSTRAINTS"),
+                 os.path.join(REPO_ROOT, "constraints.txt"),
+                 "/kaggle/working/constraints.txt"):
+        if cand and os.path.isfile(cand):
+            return cand
+    return None
+
+
 def pip_install(*pkgs: str, no_deps: bool = False, quiet: bool = True) -> int:
     """pip install with constraints file when available. Returns exit code."""
     cmd = [sys.executable, "-m", "pip", "install"]
@@ -111,8 +122,8 @@ def pip_install(*pkgs: str, no_deps: bool = False, quiet: bool = True) -> int:
         cmd.append("-q")
     if no_deps:
         cmd.append("--no-deps")
-    constraints = "/kaggle/working/constraints.txt"
-    if os.path.isfile(constraints):
+    constraints = constraints_file()
+    if constraints:
         cmd += ["-c", constraints]
     cmd += list(pkgs)
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -127,11 +138,10 @@ def autodetect_video() -> str:
     cands = _glob.glob("/kaggle/input/**/*.mp4", recursive=True)
     if cands:
         return cands[0]
-    repo_assets = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "..", "assets", "*.mp4")
+    repo_assets = os.path.join(REPO_ROOT, "assets", "*.mp4")
     cands = sorted(_glob.glob(repo_assets))
     if cands:
-        return cands[0]
+        return os.path.abspath(cands[0])
     return "/kaggle/working/hindi_reel.mp4"
 
 SRC_H264_NAME = "source_h264.mp4"

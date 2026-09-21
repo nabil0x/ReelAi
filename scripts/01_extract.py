@@ -14,12 +14,13 @@ sys.path.insert(0, os.path.dirname(__file__))
 from common import (
     base_arg, ensure_dirs, p, read_video_meta, save_meta, sh, print_vram,
     autodetect_video, normalize_video, SRC_H264_NAME,
+    DEFAULT_BASE,
 )
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Extract audio + frames from Hindi reel")
     ap.add_argument("--video", default=None, help="Path to input .mp4")
-    ap.add_argument("--base", default="/kaggle/working/project", help="Project root")
+    ap.add_argument("--base", default=DEFAULT_BASE, help="Project root")
     return ap.parse_args()
 
 def main() -> None:

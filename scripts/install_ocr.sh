@@ -13,7 +13,8 @@
 
 set -uo pipefail
 
-CONSTRAINTS=/kaggle/working/constraints.txt
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CONSTRAINTS="${REELAI_CONSTRAINTS:-$REPO_ROOT/constraints.txt}"
 echo "=== Optional PP-OCRv5 install ==="
 
 # Build constraints file if it doesn't exist yet
