@@ -1,12 +1,13 @@
 --prefer-binary
+# NOTE: Kaggle already ships torch, transformers, accelerate, safetensors,
+# opencv-python, librosa, soundfile, numpy, Pillow, matplotlib. Do NOT list
+# them here — listing them sends pip into dependency-resolver backtracking
+# (the "Downloading accelerate-1.x.y ... 1.x.y-1 ..." crawl). Import them
+# straight from the image instead.
 paddlepaddle-gpu
 paddleocr
-opencv-python==4.13.0.92
-librosa==0.11.0
-soundfile==0.13.1
-transformers==5.0.0
-accelerate==1.13.0
-safetensors==0.7.0
+# coqui-tts is installed at runtime with --no-deps (see scripts/04_tts_shootout.py);
+# only its light inference deps are listed here:
 anyascii
 coqpit-config
 einops
