@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from audio_utils import concat_with_pause, split_sentences, trim_silence
 from common import cleanup, p, pip_install, sh
+from hf_utils import default_reference, hf as _hf
 
 CHATTERBOX_BASE = "ResembleAI/chatterbox"
 CHATTERBOX_BANGLA = "EMTIAZZ/chatterbox-bangla-tts"
@@ -32,31 +33,32 @@ CB_PARAMS = dict(temperature=0.3, exaggeration=0.5, cfg_weight=0.5,
                  repetition_penalty=1.2, min_new_tokens=150)
 CB_BASE_FILES = ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "conds.pt"]
 JONGY5_FILES = CB_BASE_FILES + ["tokenizer.json"]
-DEMO_REF_REPO = "jongy5/chatterbox-bangla"
-DEMO_REF_FILE = "audios/refs/001.wav"
-
-
-def _hf(repo: str, filename: str, dest: str) -> str:
-    from huggingface_hub import hf_hub_download
-
-    return hf_hub_download(repo_id=repo, filename=filename, local_dir=dest)
 
 
 # ---------------------------------------------------------------- chatterbox
 
 def _ensure_chatterbox() -> bool:
+    """chatterbox-tts 0.1.2 pins torch==2.6.0 / transformers==4.46.3 /
+    safetensors==0.5.3, so it can never resolve against the Kaggle image.
+    Install it --no-deps and add only the deps Kaggle lacks."""
     try:
         import chatterbox  # noqa: F401
         return True
+    except ImportError as first:
+        print(f"  chatterbox pre-check: {first}")
+
+    pip_install("chatterbox-tts==0.1.2", no_deps=True)
+    pip_install("s3tokenizer", "resemble-perth==1.0.1", "conformer==0.3.2")
+    try:
+        import diffusers  # noqa: F401
     except ImportError:
-        pass
-    if pip_install("chatterbox-tts==0.1.2", "safetensors") != 0:
-        pip_install("chatterbox-tts==0.1.2", no_deps=True)
+        pip_install("diffusers")
+
     try:
         import chatterbox  # noqa: F401
         return True
-    except ImportError:
-        print("  chatterbox-tts could not be imported")
+    except ImportError as e:
+        print(f"  chatterbox-tts unusable: {e}")
         return False
 
 
@@ -197,17 +199,19 @@ def gen_cosyvoice(text: str, out_wav: str, model_id: str,
     for extra in (repo, os.path.join(repo, "third_party", "Matcha-TTS")):
         if os.path.isdir(extra):
             sys.path.insert(0, extra)
+
+    try:
+        from cosyvoice.cli.cosyvoice import CosyVoice3
+    except Exception as e:
+        print(f"  cosyvoice repo import failed: {type(e).__name__}: {e}")
+        print("  needs pynini/WeTextProcessing + sox, which rarely install on "
+              "Kaggle. Use the official Space for this engine.")
+        return False
+
     model_dir = p("models", "Fun-CosyVoice3-0.5B")
     if not os.path.isdir(model_dir):
         from huggingface_hub import snapshot_download
-        snapshot_download("FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
-                          local_dir=model_dir)
-    try:
-        from cosyvoice.cli.cosyvoice import CosyVoice3
-    except ImportError:
-        print("  cosyvoice: repo modules unavailable (needs pynini/wetext "
-              "at import time). Use the official Space instead.")
-        return False
+        snapshot_download(model_id, local_dir=model_dir)
 
     engine = CosyVoice3(model_dir)
     pieces = [o["tts_speech"].squeeze().cpu().numpy()
@@ -229,22 +233,6 @@ REGISTRY = {
 }
 
 NAMES = ["chatterbox", "cosyvoice", "vits", "mms_fallback", "jongy5"]
-
-
-def default_reference() -> str | None:
-    """Fetch the demo Bangla reference voice published with jongy5's model.
-
-    For production use pass your own --ref-voice; cloning a speaker requires
-    that speaker's permission.
-    """
-    try:
-        path = _hf(DEMO_REF_REPO, DEMO_REF_FILE, p("models", "refs"))
-        print(f"  demo reference voice: {DEMO_REF_REPO}/{DEMO_REF_FILE}")
-        print("  (pass --ref-voice <wav> to clone your own speaker instead)")
-        return path
-    except Exception as e:
-        print(f"  demo reference unavailable ({e})")
-        return None
 
 
 def gen(name: str, text: str, out_wav: str,
