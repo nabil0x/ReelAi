@@ -56,7 +56,21 @@ potentially better detection on complex scenes:
 This installs `paddlepaddle-gpu` and `paddleocr` from Paddle's own CUDA index.
 If it fails (CUDA mismatch, network issue), the pipeline continues with OpenCV.
 
-### 3. The input reel
+### 3. Hugging Face token (recommended)
+
+Model weights come from the HF Hub. Add a token so downloads are authenticated
+and not rate-limited:
+
+- **Kaggle Secrets (recommended):** *Add-ons → Secrets → Add* a secret named
+  `HF_TOKEN`. `00_setup.py` promotes it into the environment automatically —
+  no code needed in the notebook.
+- **Or inline:** `import os; os.environ["HF_TOKEN"] = "hf_..."` before running.
+
+`hf_utils.get_token()` also falls back to a cached `huggingface-cli login`, and
+every download path accepts `HF_TOKEN` / `HUGGING_FACE_HUB_TOKEN` /
+`HUGGINGFACE_HUB_TOKEN`.
+
+### 4. The input reel
 
 The development reel ships in the repo at `assets/hindi_reel.mp4`, so no upload is
 needed — `--video` can be omitted entirely. `autodetect_video()` checks
@@ -65,7 +79,7 @@ needed — `--video` can be omitted entirely. `autodetect_video()` checks
 To use a different reel, upload it as a Kaggle dataset and pass
 `--video /kaggle/input/<dataset>/your_reel.mp4`.
 
-### 4. Run each stage in order
+### 5. Run each stage in order
 
 ```python
 !python scripts/00_setup.py                          # GPU report + dirs
@@ -79,7 +93,7 @@ To use a different reel, upload it as a Kaggle dataset and pass
 > If you installed PP-OCRv5, you can try `!python scripts/02_ocr.py --engine paddle` or
 > `--engine auto` (tries paddle, falls back to opencv silently).
 
-### 5. Pick the best TTS model
+### 6. Pick the best TTS engine
 
 Listen to the files in `tts_tests/` and note the winner (e.g. `vits`).
 

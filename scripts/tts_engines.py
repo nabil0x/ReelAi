@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import chatterbox_loader as cb
 from audio_utils import concat_with_pause, split_sentences, trim_silence
 from common import cleanup, p, pip_install, sh
-from hf_utils import default_reference, hf as _hf
+from hf_utils import default_reference, hf as _hf, snapshot
 
 CHATTERBOX_BANGLA = cb.EMTIAZZ
 JONGY5_CHATTERBOX = cb.JONGY5
@@ -140,8 +140,7 @@ def gen_cosyvoice(text: str, out_wav: str, model_id: str,
 
     model_dir = p("models", "Fun-CosyVoice3-0.5B")
     if not os.path.isdir(model_dir):
-        from huggingface_hub import snapshot_download
-        snapshot_download(model_id, local_dir=model_dir)
+        snapshot(model_id, model_dir)
 
     engine = CosyVoice3(model_dir)
     pieces = [o["tts_speech"].squeeze().cpu().numpy()

@@ -12,12 +12,15 @@ from common import (
     base_arg, ensure_dirs, gpu_report, print_vram, p,
     autodetect_video, DEFAULT_BANGLA_SCRIPT, DEFAULT_BASE,
 )
+import hf_utils
 
 def main() -> None:
     base = base_arg()
     ensure_dirs()
     gpu_report()
     print_vram("boot")
+    hf_utils.load_kaggle_secret()
+    hf_utils.report_token()
 
     # Persist the default Bangla script so downstream scripts can load it.
     script_path = p("work", "localized_script.txt")
